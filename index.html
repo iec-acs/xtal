@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#eef7f6" />
+  <title>Crystallization Design Explorer | ACS I&EC</title>
+  <style>
+    :root{
+      --bg:#eef7f6;
+      --panel:#ffffff;
+      --panel-2:#f7fbfa;
+      --ink:#163331;
+      --muted:#607a77;
+      --line:#cfe0dd;
+      --accent:#0d7b72;
+      --accent-2:#2ea59a;
+      --accent-soft:#dff3ef;
+      --blue:#277da1;
+      --orange:#e18b34;
+      --red:#c95858;
+      --purple:#7867a9;
+      --shadow:0 12px 30px rgba(29,72,68,.12);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0}
+    body{
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      color:var(--ink);
+      background:
+        radial-gradient(circle at 12% 8%,rgba(46,165,154,.11),transparent 30%),
+        radial-gradient(circle at 90% 90%,rgba(39,125,161,.09),transparent 34%),
+        var(--bg);
+      overflow:hidden;
+    }
+    button,input,select{font:inherit}
+    button{touch-action:manipulation}
+    .app{
+      height:100dvh;
+      display:grid;
+      grid-template-rows:auto 1fr;
+      min-height:0;
+    }
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      padding:12px 18px;
+      border-bottom:1px solid rgba(22,51,49,.10);
+      background:rgba(255,255,255,.82);
+      backdrop-filter:blur(12px);
+      z-index:20;
+    }
+    .brand{display:flex;align-items:center;gap:12px;min-width:0}
+    .brand-mark{
+      width:42px;height:42px;border-radius:13px;display:grid;place-items:center;
+      color:white;font-weight:800;letter-spacing:-.04em;
+      background:linear-gradient(145deg,var(--accent),var(--blue));
+      box-shadow:0 8px 18px rgba(13,123,114,.22);
+      flex:none;
+    }
+    .brand-copy{min-width:0}
+    .brand-copy h1{
+      margin:0;font-size:clamp(1rem,2.1vw,1.35rem);line-height:1.15;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    }
+    .brand-copy p{margin:3px 0 0;color:var(--muted);font-size:.78rem}
+    .top-actions{display:flex;align-items:center;gap:8px}
+    .btn{
+      border:1px solid var(--line);background:var(--panel);color:var(--ink);
+      border-radius:12px;padding:9px 12px;font-weight:700;cursor:pointer;
+      box-shadow:0 3px 10px rgba(29,72,68,.06);
+    }
+    .btn:hover{border-color:var(--accent-2)}
+    .btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+    .mobile-controls{display:none}
+
+    .workspace{
+      min-height:0;
+      display:grid;
+      grid-template-columns:330px minmax(0,1fr);
+      gap:12px;
+      padding:12px;
+    }
+    .sidebar{
+      min-height:0;
+      overflow:auto;
+      padding:14px;
+      background:rgba(255,255,255,.92);
+      border:1px solid rgba(22,51,49,.10);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      scrollbar-width:thin;
+    }
+    .sidebar h2{font-size:.94rem;margin:0 0 10px}
+    .section{
+      padding:12px 0;
+      border-top:1px solid var(--line);
+    }
+    .section:first-child{border-top:0;padding-top:0}
+    .field{margin:0 0 12px}
+    .field:last-child{margin-bottom:0}
+    .field label,.field .label-row{
+      display:flex;justify-content:space-between;gap:10px;
+      font-size:.78rem;font-weight:750;margin-bottom:6px;color:var(--ink);
+    }
+    .value{color:var(--accent);font-variant-numeric:tabular-nums}
+    select,input[type="number"]{
+      width:100%;border:1px solid var(--line);border-radius:11px;
+      background:#fff;color:var(--ink);padding:9px 10px;outline:none;
+    }
+    select:focus,input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(13,123,114,.12)}
+    input[type="range"]{width:100%;accent-color:var(--accent)}
+    .segmented{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+    .segmented button{
+      border:1px solid var(--line);background:#fff;border-radius:10px;
+      padding:8px 5px;font-size:.72rem;font-weight:750;cursor:pointer;
+    }
+    .segmented button.active{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+    .checkline{display:flex;align-items:center;gap:8px;font-size:.78rem}
+    .checkline input{accent-color:var(--accent)}
+    .hint{font-size:.72rem;line-height:1.45;color:var(--muted);margin:8px 0 0}
+    .legend{
+      display:grid;grid-template-columns:1fr 1fr;gap:7px 10px;font-size:.7rem;color:var(--muted)
+    }
+    .legend span{display:flex;align-items:center;gap:6px}
+    .dot{width:9px;height:9px;border-radius:50%;flex:none}
+
+    .main{
+      min-width:0;min-height:0;
+      display:grid;grid-template-rows:minmax(330px,1.32fr) minmax(240px,.88fr);
+      gap:12px;
+    }
+    .panel{
+      position:relative;min-width:0;min-height:0;
+      background:rgba(255,255,255,.90);
+      border:1px solid rgba(22,51,49,.10);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .panel-head{
+      position:absolute;left:14px;right:14px;top:12px;
+      z-index:4;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
+      pointer-events:none;
+    }
+    .panel-title{
+      background:rgba(255,255,255,.82);backdrop-filter:blur(8px);
+      border:1px solid rgba(22,51,49,.08);border-radius:12px;padding:8px 10px;
+    }
+    .panel-title strong{display:block;font-size:.85rem}
+    .panel-title span{display:block;font-size:.7rem;color:var(--muted);margin-top:2px}
+    .canvas-wrap{position:absolute;inset:0}
+    canvas{display:block;width:100%;height:100%}
+    .graph-tools{
+      position:absolute;right:14px;bottom:14px;z-index:5;
+      display:flex;gap:7px;
+    }
+    .icon-btn{
+      width:38px;height:38px;border-radius:11px;border:1px solid var(--line);
+      background:rgba(255,255,255,.90);color:var(--ink);font-weight:800;
+      cursor:pointer;box-shadow:0 5px 15px rgba(29,72,68,.10)
+    }
+    .node-card{
+      position:absolute;z-index:6;left:14px;bottom:14px;width:min(320px,calc(100% - 90px));
+      background:rgba(255,255,255,.94);border:1px solid var(--line);
+      border-radius:14px;padding:11px 12px;box-shadow:0 8px 22px rgba(29,72,68,.12);
+      display:none;
+    }
+    .node-card.show{display:block}
+    .node-card .eyebrow{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);font-weight:800}
+    .node-card h3{font-size:.88rem;margin:3px 0 4px}
+    .node-card p{font-size:.73rem;line-height:1.4;margin:0;color:var(--muted)}
+    .close-card{position:absolute;right:8px;top:6px;border:0;background:transparent;font-size:1rem;cursor:pointer;color:var(--muted)}
+
+    .bottom-grid{
+      min-height:0;display:grid;grid-template-columns:minmax(0,1.5fr) minmax(250px,.8fr);gap:12px
+    }
+    .chart-panel,.crystal-panel{position:relative}
+    .metrics{
+      position:absolute;right:12px;top:12px;z-index:4;
+      display:grid;grid-template-columns:repeat(2,minmax(94px,1fr));gap:7px;
+      width:min(310px,48%);
+    }
+    .metric{
+      background:rgba(255,255,255,.88);backdrop-filter:blur(8px);
+      border:1px solid rgba(22,51,49,.08);border-radius:11px;padding:7px 9px
+    }
+    .metric span{display:block;font-size:.62rem;color:var(--muted)}
+    .metric strong{display:block;font-size:.82rem;margin-top:2px;font-variant-numeric:tabular-nums}
+    .status-line{
+      position:absolute;left:12px;right:12px;bottom:10px;z-index:4;
+      display:flex;gap:8px;align-items:center;font-size:.68rem;color:var(--muted);
+      background:rgba(255,255,255,.82);backdrop-filter:blur(7px);
+      border-radius:10px;padding:7px 9px;border:1px solid rgba(22,51,49,.08)
+    }
+    .status-pill{font-weight:800;color:var(--accent)}
+    .help-bubble{
+      position:absolute;right:12px;top:66px;max-width:190px;
+      border:1px solid rgba(22,51,49,.08);border-radius:12px;
+      background:rgba(255,255,255,.78);backdrop-filter:blur(6px);
+      padding:8px 9px;font-size:.68rem;color:var(--muted);line-height:1.35
+    }
+
+    .drawer-backdrop{display:none}
+    .mobile-handle{display:none}
+
+    @media (max-width: 860px){
+      body{overflow:hidden}
+      .topbar{padding:10px 12px}
+      .brand-copy p{display:none}
+      .desktop-only{display:none}
+      .mobile-controls{display:inline-flex}
+      .workspace{
+        grid-template-columns:1fr;
+        padding:8px;
+      }
+      .sidebar{
+        position:fixed;z-index:50;left:8px;right:8px;bottom:8px;
+        max-height:min(78dvh,690px);
+        transform:translateY(calc(100% + 20px));
+        transition:transform .25s ease;
+        border-radius:20px;
+        padding:18px 14px 16px;
+      }
+      .sidebar.open{transform:translateY(0)}
+      .mobile-handle{
+        display:block;width:46px;height:5px;border-radius:99px;background:var(--line);
+        margin:-7px auto 12px;
+      }
+      .drawer-backdrop{
+        position:fixed;inset:0;z-index:45;background:rgba(7,29,27,.30);
+        backdrop-filter:blur(2px);
+      }
+      .drawer-backdrop.show{display:block}
+      .main{
+        grid-template-rows:minmax(350px,1.28fr) minmax(290px,.95fr)
+      }
+      .bottom-grid{
+        grid-template-columns:1fr;
+        grid-template-rows:minmax(250px,1fr) minmax(220px,.84fr);
+      }
+      .metrics{width:min(310px,64%)}
+      .help-bubble{display:none}
+      .panel-title span{display:none}
+    }
+    @media (max-width: 560px){
+      .top-actions .btn{padding:8px 10px}
+      .brand-mark{width:38px;height:38px}
+      .main{gap:8px;grid-template-rows:minmax(340px,1.2fr) minmax(330px,1fr)}
+      .bottom-grid{gap:8px;grid-template-rows:minmax(250px,1fr) minmax(245px,1fr)}
+      .panel{border-radius:15px}
+      .metrics{
+        left:12px;right:12px;top:auto;bottom:42px;width:auto;
+        grid-template-columns:repeat(4,1fr)
+      }
+      .metric{padding:6px}
+      .metric span{font-size:.54rem}
+      .metric strong{font-size:.71rem}
+      .status-line{font-size:.62rem}
+      .node-card{bottom:58px}
+      .panel-head{top:9px;left:9px;right:9px}
+      .graph-tools{right:9px;bottom:9px}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">I&amp;EC</div>
+        <div class="brand-copy">
+          <h1>Crystallization Design Explorer</h1>
+          <p>Interactive design space for nucleation, growth, supersaturation, residence time, and particle size</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button class="btn desktop-only" id="randomizeBtn" type="button">Explore scenario</button>
+        <button class="btn mobile-controls" id="openControlsBtn" type="button">Controls</button>
+        <button class="btn primary" id="resetBtn" type="button">Reset</button>
+      </div>
+    </header>
+
+    <div class="workspace">
+      <aside class="sidebar" id="sidebar" aria-label="Crystallization controls">
+        <div class="mobile-handle" aria-hidden="true"></div>
+
+        <section class="section">
+          <h2>Material and operating mode</h2>
+          <div class="field">
+            <label for="compound">Example solute</label>
+            <select id="compound">
+              <option value="kno3">Potassium nitrate (KNO₃)</option>
+              <option value="nacl">Sodium chloride (NaCl)</option>
+              <option value="sucrose">Sucrose</option>
+              <option value="citric">Citric acid</option>
+            </select>
+          </div>
+          <div class="field">
+            <div class="label-row"><span>Primary method</span></div>
+            <div class="segmented" id="methodButtons">
+              <button type="button" data-method="cooling" class="active">Cooling</button>
+              <button type="button" data-method="evaporation">Evaporation</button>
+              <button type="button" data-method="antisolvent">Antisolvent</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Thermodynamic drivers</h2>
+          <div class="field">
+            <div class="label-row"><label for="temperature">Temperature</label><span class="value" id="temperatureValue"></span></div>
+            <input id="temperature" type="range" min="5" max="90" step="1" value="45">
+          </div>
+          <div class="field">
+            <div class="label-row"><label for="concentration">Concentration</label><span class="value" id="concentrationValue"></span></div>
+            <input id="concentration" type="range" min="10" max="180" step="1" value="78">
+          </div>
+          <div class="field">
+            <div class="label-row"><label for="coolingRate">Cooling rate</label><span class="value" id="coolingRateValue"></span></div>
+            <input id="coolingRate" type="range" min="0.1" max="8" step="0.1" value="1.7">
+          </div>
+          <div class="field">
+            <div class="label-row"><label for="evaporation">Solvent evaporated</label><span class="value" id="evaporationValue"></span></div>
+            <input id="evaporation" type="range" min="0" max="55" step="1" value="8">
+          </div>
+          <div class="field">
+            <div class="label-row"><label for="antisolvent">Antisolvent fraction</label><span class="value" id="antisolventValue"></span></div>
+            <input id="antisolvent" type="range" min="0" max="65" step="1" value="0">
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Kinetics and hydrodynamics</h2>
+          <div class="field">
+            <div class="label-row"><label for="residence">Residence time</label><span class="value" id="residenceValue"></span></div>
+            <input id="residence" type="range" min="2" max="180" step="2" value="54">
+          </div>
+          <div class="field">
+            <div class="label-row"><label for="agitation">Agitation intensity</label><span class="value" id="agitationValue"></span></div>
+            <input id="agitation" type="range" min="0" max="100" step="1" value="42">
+          </div>
+          <div class="field">
+            <div class="label-row"><label for="seed">Seed loading</label><span class="value" id="seedValue"></span></div>
+            <input id="seed" type="range" min="0" max="8" step="0.1" value="1.2">
+          </div>
+          <label class="checkline">
+            <input id="secondaryNucleation" type="checkbox" checked>
+            Include secondary nucleation
+          </label>
+          <p class="hint">Educational estimates show qualitative design tradeoffs, not validated process-design data.</p>
+        </section>
+
+        <section class="section">
+          <h2>Network legend</h2>
+          <div class="legend">
+            <span><i class="dot" style="background:#0d7b72"></i>Core state</span>
+            <span><i class="dot" style="background:#277da1"></i>Thermodynamics</span>
+            <span><i class="dot" style="background:#e18b34"></i>Kinetics</span>
+            <span><i class="dot" style="background:#7867a9"></i>Equipment</span>
+            <span><i class="dot" style="background:#c95858"></i>Risks</span>
+            <span><i class="dot" style="background:#2ea59a"></i>Product quality</span>
+          </div>
+        </section>
+      </aside>
+
+      <div class="drawer-backdrop" id="drawerBackdrop"></div>
+
+      <main class="main">
+        <section class="panel graph-panel" aria-label="Interactive crystallization network">
+          <div class="panel-head">
+            <div class="panel-title">
+              <strong>Drag-and-pull force-directed network</strong>
+              <span>Drag nodes • drag empty space to pan • wheel or pinch to zoom • tap a node for details</span>
+            </div>
+          </div>
+          <div class="canvas-wrap"><canvas id="graphCanvas"></canvas></div>
+          <div class="graph-tools">
+            <button class="icon-btn" id="zoomOutBtn" type="button" aria-label="Zoom out">−</button>
+            <button class="icon-btn" id="fitBtn" type="button" aria-label="Fit graph">◎</button>
+            <button class="icon-btn" id="zoomInBtn" type="button" aria-label="Zoom in">+</button>
+          </div>
+          <article class="node-card" id="nodeCard" aria-live="polite">
+            <button class="close-card" id="closeNodeCard" type="button" aria-label="Close">×</button>
+            <div class="eyebrow" id="nodeCategory">Concept</div>
+            <h3 id="nodeTitle">Node title</h3>
+            <p id="nodeDescription">Node description</p>
+          </article>
+        </section>
+
+        <div class="bottom-grid">
+          <section class="panel chart-panel" aria-label="Solubility and operating trajectory chart">
+            <div class="panel-head">
+              <div class="panel-title">
+                <strong>Solubility and operating trajectory</strong>
+                <span>Curve: equilibrium solubility • dashed band: metastable zone • marker: current state</span>
+              </div>
+            </div>
+            <canvas id="chartCanvas"></canvas>
+            <div class="metrics" aria-live="polite">
+              <div class="metric"><span>Supersaturation, S</span><strong id="metricS">—</strong></div>
+              <div class="metric"><span>Yield potential</span><strong id="metricYield">—</strong></div>
+              <div class="metric"><span>Mean size</span><strong id="metricSize">—</strong></div>
+              <div class="metric"><span>Width, CV</span><strong id="metricCV">—</strong></div>
+            </div>
+            <div class="status-line">
+              <span class="status-pill" id="zoneLabel">Metastable zone</span>
+              <span id="zoneExplanation">Growth is favored over spontaneous nucleation.</span>
+            </div>
+          </section>
+
+          <section class="panel crystal-panel" aria-label="Animated crystal population">
+            <div class="panel-head">
+              <div class="panel-title">
+                <strong>Animated crystal population</strong>
+                <span>Particle count and size respond to nucleation and growth conditions</span>
+              </div>
+            </div>
+            <canvas id="crystalCanvas"></canvas>
+            <div class="help-bubble" id="crystalSummary">Moderate supersaturation supports balanced nucleation and crystal growth.</div>
+          </section>
+        </div>
+      </main>
+    </div>
+  </div>
+
+<script>
+(() => {
+  "use strict";
+
+  const $ = (id) => document.getElementById(id);
+  const controls = {
+    compound: $("compound"),
+    temperature: $("temperature"),
+    concentration: $("concentration"),
+    coolingRate: $("coolingRate"),
+    evaporation: $("evaporation"),
+    antisolvent: $("antisolvent"),
+    residence: $("residence"),
+    agitation: $("agitation"),
+    seed: $("seed"),
+    secondaryNucleation: $("secondaryNucleation")
+  };
+
+  let method = "cooling";
+
+  const materials = {
+    kno3: {
+      name: "Potassium nitrate",
+      formula: "KNO₃",
+      sol: t => 12.5 + 0.78*t + 0.0105*t*t,
+      sensitivity: 1.00,
+      shape: "needle"
+    },
+    nacl: {
+      name: "Sodium chloride",
+      formula: "NaCl",
+      sol: t => 35.5 + 0.035*t,
+      sensitivity: 0.30,
+      shape: "cube"
+    },
+    sucrose: {
+      name: "Sucrose",
+      formula: "C₁₂H₂₂O₁₁",
+      sol: t => 62 + 0.93*t + 0.010*t*t,
+      sensitivity: 0.75,
+      shape: "prism"
+    },
+    citric: {
+      name: "Citric acid",
+      formula: "C₆H₈O₇",
+      sol: t => 45 + 0.64*t + 0.005*t*t,
+      sensitivity: 0.70,
+      shape: "plate"
+    }
+  };
+
+  const descriptions = {
+    "Crystallization Design": "The central design problem: create the desired solid form, purity, yield, and particle-size distribution while maintaining a controllable process.",
+    "Supersaturation": "The thermodynamic driving force for crystallization. Too little gives slow growth; too much can cause uncontrolled nucleation, agglomeration, or fouling.",
+    "Solubility": "Equilibrium concentration as a function of temperature and solvent composition. The operating path relative to this curve defines the crystallization zone.",
+    "Cooling": "Lowering temperature reduces solubility for many compounds. Cooling profile and heat-transfer limits shape the supersaturation trajectory.",
+    "Evaporation": "Removing solvent increases solution concentration. Evaporation rate, pressure, heat input, and boiling behavior influence nucleation and fouling.",
+    "Antisolvent": "Adding a miscible poor solvent lowers solubility. Mixing quality and local concentration gradients are critical for particle uniformity.",
+    "Primary Nucleation": "Formation of new crystals without existing crystal surfaces. It rises sharply after the metastable zone is exceeded.",
+    "Secondary Nucleation": "New crystals generated by crystal-crystal or crystal-equipment interactions. Agitation and solids loading often increase it.",
+    "Crystal Growth": "Solute transport and surface integration enlarge existing crystals. Growth competes with nucleation for available supersaturation.",
+    "Residence Time": "Time available for nucleation, growth, ripening, and classification. Longer time generally enables larger crystals but can reduce throughput.",
+    "Agitation": "Controls mixing, heat transfer, suspension, collision frequency, and local supersaturation. Excessive shear can create fines or breakage.",
+    "Seeding": "Introduces controlled crystal surface area and can narrow the induction-time uncertainty. Seed size, loading, and addition point matter.",
+    "Mean Particle Size": "A central product attribute affecting filtration, drying, flowability, dissolution, and downstream handling.",
+    "Size Distribution": "The spread of crystal sizes. Broad distributions may indicate changing nucleation rates, mixing limitations, agglomeration, or breakage.",
+    "Polymorph Control": "Solvent, temperature, supersaturation, impurities, and seeding can change which crystal structure forms.",
+    "Agglomeration": "Crystals adhere to one another, often under high supersaturation or poor mixing, producing irregular particles and broad distributions.",
+    "Fouling Risk": "Unwanted deposition on heat-transfer or vessel surfaces. High local supersaturation and cold spots commonly raise the risk.",
+    "Filtration": "Larger, stronger, and less compressible crystals generally filter and wash more easily than fines-rich or needle-like products.",
+    "MSMPR": "Mixed-suspension, mixed-product-removal crystallizer. Residence-time distribution and continuous removal strongly influence the steady-state population.",
+    "Batch Crystallizer": "A flexible vessel where temperature or solvent composition follows a programmed trajectory over time.",
+    "Oslo / Classified": "Circulating classified crystallizers retain large crystals while removing smaller particles, supporting coarse product generation."
+  };
+
+  const nodes = [
+    {id:"core", label:"Crystallization\\nDesign", category:"Core state", color:"#0d7b72", r:34, x:0, y:0},
+    {id:"super", label:"Supersaturation", category:"Thermodynamics", color:"#277da1", r:25},
+    {id:"sol", label:"Solubility", category:"Thermodynamics", color:"#277da1", r:23},
+    {id:"cool", label:"Cooling", category:"Thermodynamics", color:"#277da1", r:21},
+    {id:"evap", label:"Evaporation", category:"Thermodynamics", color:"#277da1", r:21},
+    {id:"anti", label:"Antisolvent", category:"Thermodynamics", color:"#277da1", r:22},
+    {id:"pnuc", label:"Primary\\nNucleation", category:"Kinetics", color:"#e18b34", r:24},
+    {id:"snuc", label:"Secondary\\nNucleation", category:"Kinetics", color:"#e18b34", r:24},
+    {id:"growth", label:"Crystal Growth", category:"Kinetics", color:"#e18b34", r:25},
+    {id:"res", label:"Residence Time", category:"Kinetics", color:"#e18b34", r:22},
+    {id:"agit", label:"Agitation", category:"Equipment", color:"#7867a9", r:21},
+    {id:"seed", label:"Seeding", category:"Equipment", color:"#7867a9", r:20},
+    {id:"batch", label:"Batch\\nCrystallizer", category:"Equipment", color:"#7867a9", r:23},
+    {id:"msmpr", label:"MSMPR", category:"Equipment", color:"#7867a9", r:21},
+    {id:"oslo", label:"Oslo /\\nClassified", category:"Equipment", color:"#7867a9", r:22},
+    {id:"size", label:"Mean Particle\\nSize", category:"Product quality", color:"#2ea59a", r:25},
+    {id:"psd", label:"Size\\nDistribution", category:"Product quality", color:"#2ea59a", r:24},
+    {id:"poly", label:"Polymorph\\nControl", category:"Product quality", color:"#2ea59a", r:23},
+    {id:"filter", label:"Filtration", category:"Product quality", color:"#2ea59a", r:21},
+    {id:"aggl", label:"Agglomeration", category:"Risks", color:"#c95858", r:22},
+    {id:"foul", label:"Fouling Risk", category:"Risks", color:"#c95858", r:22}
+  ];
+
+  const links = [
+    ["core","super"],["core","pnuc"],["core","growth"],["core","size"],["core","batch"],["core","msmpr"],
+    ["sol","super"],["cool","sol"],["evap","super"],["anti","sol"],
+    ["super","pnuc"],["super","growth"],["super","poly"],["super","aggl"],["super","foul"],
+    ["seed","pnuc"],["seed","growth"],["agit","snuc"],["agit","growth"],["agit","aggl"],
+    ["pnuc","psd"],["snuc","psd"],["growth","size"],["growth","psd"],["res","growth"],["res","size"],
+    ["size","filter"],["psd","filter"],["psd","aggl"],["batch","cool"],["batch","anti"],
+    ["msmpr","res"],["msmpr","snuc"],["oslo","size"],["oslo","res"],["foul","filter"]
+  ].map(([a,b]) => ({a,b}));
+
+  // Seed node positions in rings.
+  nodes.forEach((n, i) => {
+    if (i === 0) return;
+    const ring = i < 7 ? 150 : i < 14 ? 250 : 350;
+    const angle = (i * 2.399) % (Math.PI*2);
+    n.x = Math.cos(angle)*ring + (Math.random()-.5)*35;
+    n.y = Math.sin(angle)*ring + (Math.random()-.5)*35;
+    n.vx = 0; n.vy = 0;
+  });
+  nodes[0].vx = nodes[0].vy = 0;
+
+  const state = {
+    values: {},
+    result: {},
+    simAlpha: 1,
+    selectedNode: null
+  };
+
+  function readValues() {
+    state.values = {
+      compound: controls.compound.value,
+      temperature: +controls.temperature.value,
+      concentration: +controls.concentration.value,
+      coolingRate: +controls.coolingRate.value,
+      evaporation: +controls.evaporation.value,
+      antisolvent: +controls.antisolvent.value,
+      residence: +controls.residence.value,
+      agitation: +controls.agitation.value,
+      seed: +controls.seed.value,
+      secondary: controls.secondaryNucleation.checked,
+      method
+    };
+  }
+
+  function calculate() {
+    readValues();
+    const v = state.values;
+    const m = materials[v.compound];
+
+    const evaporationFactor = 1 / Math.max(0.42, 1 - v.evaporation/100);
+    const antiFactor = Math.max(0.34, 1 - 0.0105*v.antisolvent);
+    const effectiveConcentration = v.concentration * evaporationFactor;
+    const solubility = Math.max(3, m.sol(v.temperature) * antiFactor);
+    const S = effectiveConcentration / solubility;
+    const supersat = Math.max(0, S - 1);
+
+    const methodDrive =
+      v.method === "cooling" ? 0.55 + v.coolingRate/5 :
+      v.method === "evaporation" ? 0.55 + v.evaporation/35 :
+      0.55 + v.antisolvent/32;
+
+    const seedSurface = 0.28 + Math.sqrt(v.seed + 0.05) * 0.52;
+    const primary = Math.pow(Math.max(0, supersat - 0.035), 1.85) * 132 * m.sensitivity * methodDrive;
+    const secondary = v.secondary ? supersat * (v.agitation/100) * (0.45 + v.seed/4) * 52 : 0;
+    const nucleation = primary + secondary;
+
+    const growth = Math.pow(Math.max(0,supersat), .86) * (0.62 + seedSurface) *
+      (0.65 + Math.min(v.residence,120)/110) * (1 - Math.max(0,v.agitation-72)/160) * 72;
+
+    const meanSize = Math.max(12, Math.min(880,
+      34 + 4.3*v.residence + 36*v.seed + 3.0*growth - 5.4*nucleation - Math.max(0,v.agitation-65)*2.2
+    ));
+
+    const cv = Math.max(8, Math.min(78,
+      21 + 0.41*nucleation + Math.max(0,v.agitation-68)*0.35 - 1.9*v.seed + (v.method==="antisolvent" ? 5 : 0)
+    ));
+
+    const dissolvedAboveEq = Math.max(0, effectiveConcentration - solubility);
+    const yieldPotential = Math.max(0, Math.min(94,
+      100 * dissolvedAboveEq / Math.max(effectiveConcentration,1) * (0.60 + Math.min(v.residence,100)/250)
+    ));
+
+    const metastableWidth = 0.07 + 0.0017*(100-v.agitation) + 0.012*v.seed;
+    let zone, explanation;
+    if (S < 0.98) {
+      zone = "Undersaturated";
+      explanation = "Crystals tend to dissolve; increase concentration or reduce solubility.";
+    } else if (S < 1.02) {
+      zone = "Near saturation";
+      explanation = "Little net driving force; nucleation and growth are both slow.";
+    } else if (S < 1 + metastableWidth) {
+      zone = "Metastable zone";
+      explanation = "Seeded growth is favored over spontaneous primary nucleation.";
+    } else if (S < 1 + metastableWidth*2.0) {
+      zone = "Nucleation zone";
+      explanation = "New crystals form rapidly; particle count rises and mean size can fall.";
+    } else {
+      zone = "High-risk supersaturation";
+      explanation = "Very high local driving force raises fines, agglomeration, and fouling risk.";
+    }
+
+    const fouling = Math.min(100, supersat*120 + v.coolingRate*4 + v.antisolvent*.42 + v.evaporation*.32);
+    const agglomeration = Math.min(100, supersat*105 + Math.max(0,65-v.agitation)*.42 + cv*.25);
+
+    state.result = {
+      material:m, solubility, effectiveConcentration, S, supersat, nucleation, growth,
+      meanSize, cv, yieldPotential, zone, explanation, metastableWidth, fouling, agglomeration
+    };
+  }
+
+  function updateLabels() {
+    const v = state.values;
+    $("temperatureValue").textContent = `${v.temperature.toFixed(0)} °C`;
+    $("concentrationValue").textContent = `${v.concentration.toFixed(0)} g / 100 g solvent`;
+    $("coolingRateValue").textContent = `${v.coolingRate.toFixed(1)} °C/min`;
+    $("evaporationValue").textContent = `${v.evaporation.toFixed(0)}%`;
+    $("antisolventValue").textContent = `${v.antisolvent.toFixed(0)}%`;
+    $("residenceValue").textContent = `${v.residence.toFixed(0)} min`;
+    $("agitationValue").textContent = `${v.agitation.toFixed(0)}%`;
+    $("seedValue").textContent = `${v.seed.toFixed(1)} wt%`;
+
+    const r = state.result;
+    $("metricS").textContent = r.S.toFixed(2);
+    $("metricYield").textContent = `${r.yieldPotential.toFixed(0)}%`;
+    $("metricSize").textContent = `${r.meanSize.toFixed(0)} µm`;
+    $("metricCV").textContent = `${r.cv.toFixed(0)}%`;
+    $("zoneLabel").textContent = r.zone;
+    $("zoneExplanation").textContent = r.explanation;
+
+    $("crystalSummary").textContent =
+      r.zone === "Undersaturated" ? "Crystal particles shrink because the liquid phase is below equilibrium saturation." :
+      r.zone === "Near saturation" ? "Only slight particle change occurs because the net crystallization driving force is small." :
+      r.zone === "Metastable zone" ? "Existing seeds grow steadily while spontaneous nucleation remains limited." :
+      r.zone === "Nucleation zone" ? "Many new crystals appear, increasing particle count and broadening the size distribution." :
+      "Rapid nucleation and collisions create fines, clusters, and a higher surface-fouling tendency.";
+
+    // Network visual emphasis
+    const emphasis = {
+      super: Math.min(1.8, .75 + r.S/1.5),
+      pnuc: .65 + Math.min(1.5, r.nucleation/55),
+      snuc: .65 + Math.min(1.4, (v.secondary ? r.nucleation/80 : 0)),
+      growth: .65 + Math.min(1.5, r.growth/55),
+      size: .75 + Math.min(1.25, r.meanSize/500),
+      psd: .75 + Math.min(1.25, r.cv/55),
+      foul: .65 + r.fouling/85,
+      aggl: .65 + r.agglomeration/85,
+      cool: v.method==="cooling" ? 1.6 : .8,
+      evap: v.method==="evaporation" ? 1.6 : .8,
+      anti: v.method==="antisolvent" ? 1.6 : .8,
+      seed: .7 + v.seed/7,
+      res: .7 + v.residence/150,
+      agit: .7 + v.agitation/100
+    };
+    nodes.forEach(n => n.emphasis = emphasis[n.id] || 0.85);
+  }
+
+  function updateAll() {
+    calculate();
+    updateLabels();
+    state.simAlpha = Math.max(state.simAlpha, .12);
+  }
+
+  Object.values(controls).forEach(el => {
+    el.addEventListener("input", updateAll);
+    el.addEventListener("change", updateAll);
+  });
+
+  $("methodButtons").addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-method]");
+    if (!btn) return;
+    method = btn.dataset.method;
+    [...$("methodButtons").querySelectorAll("button")].forEach(b => b.classList.toggle("active", b===btn));
+    updateAll();
+  });
+
+  // Responsive control drawer
+  const sidebar = $("sidebar");
+  const backdrop = $("drawerBackdrop");
+  function setDrawer(open) {
+    sidebar.classList.toggle("open", open);
+    backdrop.classList.toggle("show", open);
+  }
+  $("openControlsBtn").addEventListener("click", () => setDrawer(true));
+  backdrop.addEventListener("click", () => setDrawer(false));
+
+  $("resetBtn").addEventListener("click", () => {
+    controls.compound.value = "kno3";
+    controls.temperature.value = 45;
+    controls.concentration.value = 78;
+    controls.coolingRate.value = 1.7;
+    controls.evaporation.value = 8;
+    controls.antisolvent.value = 0;
+    controls.residence.value = 54;
+    controls.agitation.value = 42;
+    controls.seed.value = 1.2;
+    controls.secondaryNucleation.checked = true;
+    method = "cooling";
+    [...$("methodButtons").querySelectorAll("button")].forEach(b => b.classList.toggle("active", b.dataset.method==="cooling"));
+    fitGraph();
+    updateAll();
+  });
+
+  $("randomizeBtn").addEventListener("click", () => {
+    const methods = ["cooling","evaporation","antisolvent"];
+    method = methods[Math.floor(Math.random()*methods.length)];
+    [...$("methodButtons").querySelectorAll("button")].forEach(b => b.classList.toggle("active", b.dataset.method===method));
+    controls.temperature.value = Math.round(18 + Math.random()*62);
+    controls.concentration.value = Math.round(32 + Math.random()*115);
+    controls.coolingRate.value = (0.3 + Math.random()*5.8).toFixed(1);
+    controls.evaporation.value = Math.round(Math.random()*38);
+    controls.antisolvent.value = Math.round(Math.random()*45);
+    controls.residence.value = Math.round((14 + Math.random()*138)/2)*2;
+    controls.agitation.value = Math.round(20 + Math.random()*68);
+    controls.seed.value = (Math.random()*5.2).toFixed(1);
+    updateAll();
+  });
+
+  // High-DPI canvas setup
+  function setupCanvas(canvas) {
+    const rect = canvas.getBoundingClientRect();
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const w = Math.max(1, Math.round(rect.width*dpr));
+    const h = Math.max(1, Math.round(rect.height*dpr));
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w; canvas.height = h;
+    }
+    const ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    return {ctx, width:rect.width, height:rect.height, dpr};
+  }
+
+  // Force graph
+  const graphCanvas = $("graphCanvas");
+  let view = {x:0,y:0,scale:1};
+  let dragNode = null;
+  let isPanning = false;
+  let pointerStart = null;
+  let viewStart = null;
+  let lastTouchDistance = 0;
+  let pointers = new Map();
+
+  function worldToScreen(x,y,w,h) {
+    return {x:w/2 + view.x + x*view.scale, y:h/2 + view.y + y*view.scale};
+  }
+  function screenToWorld(x,y,w,h) {
+    return {x:(x-w/2-view.x)/view.scale, y:(y-h/2-view.y)/view.scale};
+  }
+  function nodeAt(sx,sy,w,h) {
+    let best=null, bestD=Infinity;
+    for (const n of nodes) {
+      const p=worldToScreen(n.x,n.y,w,h);
+      const d=Math.hypot(sx-p.x,sy-p.y);
+      if (d < n.r*view.scale+8 && d<bestD){best=n;bestD=d;}
+    }
+    return best;
+  }
+
+  function simulate() {
+    if (state.simAlpha < .002) return;
+    const alpha = state.simAlpha;
+
+    // Repulsion
+    for (let i=0;i<nodes.length;i++){
+      for (let j=i+1;j<nodes.length;j++){
+        const a=nodes[i], b=nodes[j];
+        let dx=b.x-a.x, dy=b.y-a.y;
+        let d2=dx*dx+dy*dy;
+        if(d2<1){dx=(Math.random()-.5);dy=(Math.random()-.5);d2=1;}
+        const d=Math.sqrt(d2);
+        const minD=(a.r+b.r)*1.85;
+        const force = (d<minD ? 1.9 : 0.36) * 15000 / d2 * alpha;
+        const fx=force*dx/d, fy=force*dy/d;
+        if(!a.fixed){a.vx=(a.vx||0)-fx;a.vy=(a.vy||0)-fy;}
+        if(!b.fixed){b.vx=(b.vx||0)+fx;b.vy=(b.vy||0)+fy;}
+      }
+    }
+
+    // Springs
+    for (const l of links){
+      const a=nodes.find(n=>n.id===l.a), b=nodes.find(n=>n.id===l.b);
+      const dx=b.x-a.x, dy=b.y-a.y, d=Math.max(1,Math.hypot(dx,dy));
+      const target = (a.id==="core"||b.id==="core") ? 145 : 120;
+      const f=(d-target)*.014*alpha;
+      const fx=f*dx/d, fy=f*dy/d;
+      if(!a.fixed){a.vx+=fx;a.vy+=fy;}
+      if(!b.fixed){b.vx-=fx;b.vy-=fy;}
+    }
+
+    // Centering and mild category clustering
+    const categoryCenters = {
+      "Thermodynamics":{x:-250,y:-100},
+      "Kinetics":{x:190,y:-130},
+      "Equipment":{x:-160,y:190},
+      "Product quality":{x:220,y:180},
+      "Risks":{x:330,y:20},
+      "Core state":{x:0,y:0}
+    };
+    for(const n of nodes){
+      const target = categoryCenters[n.category] || {x:0,y:0};
+      if(!n.fixed){
+        n.vx += (target.x-n.x)*.0009*alpha;
+        n.vy += (target.y-n.y)*.0009*alpha;
+        n.vx *= .86; n.vy *= .86;
+        n.x += n.vx; n.y += n.vy;
+      }
+    }
+    state.simAlpha *= .985;
+  }
+
+  function roundedRect(ctx,x,y,w,h,r){
+    const rr=Math.min(r,w/2,h/2);
+    ctx.beginPath();
+    ctx.moveTo(x+rr,y);
+    ctx.arcTo(x+w,y,x+w,y+h,rr);
+    ctx.arcTo(x+w,y+h,x,y+h,rr);
+    ctx.arcTo(x,y+h,x,y,rr);
+    ctx.arcTo(x,y,x+w,y,rr);
+    ctx.closePath();
+  }
+
+  function drawGraph() {
+    const {ctx,width:w,height:h} = setupCanvas(graphCanvas);
+    ctx.clearRect(0,0,w,h);
+
+    // grid
+    ctx.save();
+    ctx.globalAlpha=.35;
+    ctx.strokeStyle="#dbe9e7";
+    ctx.lineWidth=1;
+    const grid=42*view.scale;
+    if(grid>15){
+      const ox=((w/2+view.x)%grid+grid)%grid;
+      const oy=((h/2+view.y)%grid+grid)%grid;
+      for(let x=ox;x<w;x+=grid){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}
+      for(let y=oy;y<h;y+=grid){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+    }
+    ctx.restore();
+
+    // links
+    ctx.lineCap="round";
+    for(const l of links){
+      const a=nodes.find(n=>n.id===l.a), b=nodes.find(n=>n.id===l.b);
+      const pa=worldToScreen(a.x,a.y,w,h), pb=worldToScreen(b.x,b.y,w,h);
+      const intensity=Math.max(a.emphasis||1,b.emphasis||1);
+      ctx.beginPath();ctx.moveTo(pa.x,pa.y);ctx.lineTo(pb.x,pb.y);
+      ctx.strokeStyle=`rgba(73,112,108,${Math.min(.5,.18+.08*intensity)})`;
+      ctx.lineWidth=Math.max(1,1.35*view.scale*Math.min(1.3,intensity));
+      ctx.stroke();
+    }
+
+    // nodes
+    for(const n of nodes){
+      const p=worldToScreen(n.x,n.y,w,h);
+      const rr=n.r*view.scale*(.92+.08*(n.emphasis||1));
+      if(p.x<-80||p.x>w+80||p.y<-80||p.y>h+80) continue;
+
+      ctx.save();
+      ctx.shadowColor="rgba(22,51,49,.18)";
+      ctx.shadowBlur=12;
+      ctx.shadowOffsetY=5;
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,rr,0,Math.PI*2);
+      ctx.fillStyle=n.color;
+      ctx.globalAlpha = state.selectedNode && state.selectedNode!==n ? .55 : .96;
+      ctx.fill();
+      ctx.shadowColor="transparent";
+      ctx.lineWidth= state.selectedNode===n ? 4 : 2;
+      ctx.strokeStyle= state.selectedNode===n ? "#ffffff" : "rgba(255,255,255,.86)";
+      ctx.stroke();
+      ctx.restore();
+
+      if(view.scale>.50){
+        ctx.fillStyle="#fff";
+        ctx.textAlign="center";ctx.textBaseline="middle";
+        ctx.font=`${n.id==="core" ? 700 : 650} ${Math.max(8,Math.min(12,10.5*view.scale))}px Inter, sans-serif`;
+        const lines=n.label.split("\\n");
+        const lineH=Math.max(10,12*view.scale);
+        lines.forEach((line,i)=>ctx.fillText(line,p.x,p.y+(i-(lines.length-1)/2)*lineH));
+      }
+    }
+
+    simulate();
+    requestAnimationFrame(drawGraph);
+  }
+
+  function showNode(n) {
+    state.selectedNode=n;
+    $("nodeCategory").textContent=n.category;
+    $("nodeTitle").textContent=n.label.replace("\\n"," ");
+    $("nodeDescription").textContent=descriptions[n.label.replace("\\n"," ")] || descriptions[n.label] || "Explore this factor by adjusting the operating controls and observing the network, solubility trajectory, and crystal population.";
+    $("nodeCard").classList.add("show");
+  }
+  $("closeNodeCard").addEventListener("click",()=>{
+    state.selectedNode=null;$("nodeCard").classList.remove("show");
+  });
+
+  graphCanvas.addEventListener("pointerdown",(e)=>{
+    graphCanvas.setPointerCapture(e.pointerId);
+    pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    const rect=graphCanvas.getBoundingClientRect();
+    const sx=e.clientX-rect.left, sy=e.clientY-rect.top;
+    if(pointers.size===1){
+      const hit=nodeAt(sx,sy,rect.width,rect.height);
+      if(hit){
+        dragNode=hit;hit.fixed=true;showNode(hit);state.simAlpha=.25;
+      }else{
+        isPanning=true;
+        pointerStart={x:e.clientX,y:e.clientY};
+        viewStart={x:view.x,y:view.y};
+      }
+    }
+  });
+  graphCanvas.addEventListener("pointermove",(e)=>{
+    if(!pointers.has(e.pointerId)) return;
+    pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    const rect=graphCanvas.getBoundingClientRect();
+
+    if(pointers.size===2){
+      const pts=[...pointers.values()];
+      const dist=Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y);
+      if(lastTouchDistance){
+        const factor=dist/lastTouchDistance;
+        const cx=(pts[0].x+pts[1].x)/2-rect.left;
+        const cy=(pts[0].y+pts[1].y)/2-rect.top;
+        zoomAt(factor,cx,cy,rect.width,rect.height);
+      }
+      lastTouchDistance=dist;
+      return;
+    }
+    if(dragNode){
+      const world=screenToWorld(e.clientX-rect.left,e.clientY-rect.top,rect.width,rect.height);
+      dragNode.x=world.x;dragNode.y=world.y;dragNode.vx=dragNode.vy=0;state.simAlpha=.18;
+    }else if(isPanning && pointerStart){
+      view.x=viewStart.x+(e.clientX-pointerStart.x);
+      view.y=viewStart.y+(e.clientY-pointerStart.y);
+    }
+  });
+  function releasePointer(e){
+    pointers.delete(e.pointerId);
+    lastTouchDistance=0;
+    if(dragNode){dragNode.fixed=false;dragNode=null;state.simAlpha=.12;}
+    isPanning=false;pointerStart=null;
+  }
+  graphCanvas.addEventListener("pointerup",releasePointer);
+  graphCanvas.addEventListener("pointercancel",releasePointer);
+  graphCanvas.addEventListener("wheel",(e)=>{
+    e.preventDefault();
+    const rect=graphCanvas.getBoundingClientRect();
+    zoomAt(Math.exp(-e.deltaY*.0012),e.clientX-rect.left,e.clientY-rect.top,rect.width,rect.height);
+  },{passive:false});
+
+  function zoomAt(factor,cx,cy,w,h){
+    const old=view.scale;
+    const next=Math.max(.35,Math.min(2.2,old*factor));
+    const wx=(cx-w/2-view.x)/old;
+    const wy=(cy-h/2-view.y)/old;
+    view.scale=next;
+    view.x=cx-w/2-wx*next;
+    view.y=cy-h/2-wy*next;
+  }
+  function fitGraph(){view={x:0,y:0,scale:window.innerWidth<560?.68:.9};state.simAlpha=.15;}
+  $("fitBtn").addEventListener("click",fitGraph);
+  $("zoomInBtn").addEventListener("click",()=>{
+    const r=graphCanvas.getBoundingClientRect();zoomAt(1.18,r.width/2,r.height/2,r.width,r.height)
+  });
+  $("zoomOutBtn").addEventListener("click",()=>{
+    const r=graphCanvas.getBoundingClientRect();zoomAt(.84,r.width/2,r.height/2,r.width,r.height)
+  });
+
+  // Solubility chart
+  const chartCanvas=$("chartCanvas");
+  function drawChart(){
+    const {ctx,width:w,height:h}=setupCanvas(chartCanvas);
+    ctx.clearRect(0,0,w,h);
+    const r=state.result,v=state.values;
+    const pad={l:52,r:18,t:56,b:38};
+    const pw=Math.max(10,w-pad.l-pad.r), ph=Math.max(10,h-pad.t-pad.b);
+
+    const temps=[];
+    let maxY=0;
+    for(let t=0;t<=100;t+=2){
+      const sol=Math.max(3,r.material.sol(t)*Math.max(.34,1-.0105*v.antisolvent));
+      temps.push({t,sol});
+      maxY=Math.max(maxY,sol);
+    }
+    maxY=Math.max(maxY,r.effectiveConcentration)*1.18;
+    maxY=Math.max(50,maxY);
+    const x=t=>pad.l+(t/100)*pw;
+    const y=val=>pad.t+ph-(val/maxY)*ph;
+
+    // Plot background
+    ctx.fillStyle="rgba(247,251,250,.78)";
+    roundedRect(ctx,pad.l,pad.t,pw,ph,10);ctx.fill();
+
+    // Grid and axes
+    ctx.font="11px Inter, sans-serif";
+    ctx.fillStyle="#607a77";
+    ctx.strokeStyle="#d7e5e2";
+    ctx.lineWidth=1;
+    for(let i=0;i<=5;i++){
+      const yy=pad.t+ph*i/5;
+      ctx.beginPath();ctx.moveTo(pad.l,yy);ctx.lineTo(pad.l+pw,yy);ctx.stroke();
+      const val=maxY*(1-i/5);
+      ctx.textAlign="right";ctx.textBaseline="middle";ctx.fillText(val.toFixed(0),pad.l-8,yy);
+    }
+    for(let i=0;i<=5;i++){
+      const xx=pad.l+pw*i/5;
+      ctx.beginPath();ctx.moveTo(xx,pad.t);ctx.lineTo(xx,pad.t+ph);ctx.stroke();
+      ctx.textAlign="center";ctx.textBaseline="top";ctx.fillText(String(i*20),xx,pad.t+ph+7);
+    }
+    ctx.fillStyle="#607a77";
+    ctx.textAlign="center";ctx.fillText("Temperature (°C)",pad.l+pw/2,h-9);
+    ctx.save();ctx.translate(13,pad.t+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText("g solute / 100 g solvent",0,0);ctx.restore();
+
+    // Metastable band
+    ctx.beginPath();
+    temps.forEach((p,i)=>{
+      const upper=p.sol*(1+r.metastableWidth);
+      const px=x(p.t),py=y(upper);
+      if(i===0)ctx.moveTo(px,py); else ctx.lineTo(px,py);
+    });
+    for(let i=temps.length-1;i>=0;i--){
+      const p=temps[i],px=x(p.t),py=y(p.sol);
+      ctx.lineTo(px,py);
+    }
+    ctx.closePath();
+    ctx.fillStyle="rgba(46,165,154,.16)";ctx.fill();
+
+    // Solubility curve
+    ctx.beginPath();
+    temps.forEach((p,i)=>{
+      const px=x(p.t),py=y(p.sol);
+      if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);
+    });
+    ctx.strokeStyle="#0d7b72";ctx.lineWidth=3;ctx.stroke();
+
+    // Metastable upper boundary
+    ctx.beginPath();
+    temps.forEach((p,i)=>{
+      const px=x(p.t),py=y(p.sol*(1+r.metastableWidth));
+      if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);
+    });
+    ctx.setLineDash([6,5]);ctx.strokeStyle="#2ea59a";ctx.lineWidth=1.7;ctx.stroke();ctx.setLineDash([]);
+
+    // Operating path
+    const startT=Math.min(95,v.temperature+Math.max(8,v.coolingRate*7));
+    const startSol=Math.max(3,r.material.sol(startT)*Math.max(.34,1-.0105*v.antisolvent));
+    const startC=Math.max(startSol*.92,Math.min(r.effectiveConcentration*.82,maxY*.9));
+    ctx.beginPath();ctx.moveTo(x(startT),y(startC));ctx.lineTo(x(v.temperature),y(r.effectiveConcentration));
+    ctx.strokeStyle="#e18b34";ctx.lineWidth=2.5;ctx.stroke();
+
+    // Current state marker
+    const cx=x(v.temperature),cy=y(r.effectiveConcentration);
+    ctx.beginPath();ctx.arc(cx,cy,7,0,Math.PI*2);ctx.fillStyle="#c95858";ctx.fill();
+    ctx.lineWidth=3;ctx.strokeStyle="#fff";ctx.stroke();
+    ctx.font="700 11px Inter, sans-serif";ctx.fillStyle="#163331";
+    ctx.textAlign=cx>w*.73?"right":"left";ctx.textBaseline="bottom";
+    ctx.fillText(`Current S = ${r.S.toFixed(2)}`,cx+(cx>w*.73?-11:11),cy-9);
+
+    requestAnimationFrame(drawChart);
+  }
+
+  // Crystal animation
+  const crystalCanvas=$("crystalCanvas");
+  const particles=[];
+  function ensureParticles(){
+    const target=Math.round(Math.max(8,Math.min(72,10+state.result.nucleation*.75+state.values.seed*2)));
+    while(particles.length<target){
+      particles.push({
+        x:Math.random(),y:Math.random(),
+        vx:(Math.random()-.5)*.0008,vy:(Math.random()-.5)*.0008,
+        s:.5+Math.random(),rot:Math.random()*Math.PI,
+        phase:Math.random()*Math.PI*2
+      });
+    }
+    while(particles.length>target)particles.pop();
+  }
+
+  function drawCrystalShape(ctx,x,y,size,rot,shape,alpha=1){
+    ctx.save();ctx.translate(x,y);ctx.rotate(rot);ctx.globalAlpha=alpha;
+    ctx.fillStyle="rgba(46,165,154,.26)";
+    ctx.strokeStyle="#0d7b72";ctx.lineWidth=Math.max(1,size*.08);
+    if(shape==="cube"){
+      ctx.beginPath();ctx.rect(-size*.55,-size*.55,size*1.1,size*1.1);ctx.fill();ctx.stroke();
+      ctx.beginPath();ctx.moveTo(-size*.55,-size*.55);ctx.lineTo(-size*.22,-size*.82);ctx.lineTo(size*.85,-size*.82);ctx.lineTo(size*.55,-size*.55);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(size*.55,-size*.55);ctx.lineTo(size*.85,-size*.82);ctx.lineTo(size*.85,size*.25);ctx.lineTo(size*.55,size*.55);ctx.stroke();
+    }else if(shape==="needle"){
+      ctx.beginPath();
+      ctx.moveTo(-size*.12,-size);ctx.lineTo(size*.16,-size*.72);ctx.lineTo(size*.18,size*.82);
+      ctx.lineTo(0,size);ctx.lineTo(-size*.18,size*.75);ctx.lineTo(-size*.16,-size*.72);
+      ctx.closePath();ctx.fill();ctx.stroke();
+    }else if(shape==="plate"){
+      ctx.beginPath();
+      for(let i=0;i<6;i++){
+        const a=Math.PI/3*i;
+        const px=Math.cos(a)*size,py=Math.sin(a)*size*.55;
+        if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);
+      }
+      ctx.closePath();ctx.fill();ctx.stroke();
+    }else{
+      ctx.beginPath();
+      ctx.moveTo(0,-size);ctx.lineTo(size*.62,-size*.35);ctx.lineTo(size*.42,size*.85);
+      ctx.lineTo(-size*.42,size*.85);ctx.lineTo(-size*.62,-size*.35);ctx.closePath();
+      ctx.fill();ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawCrystals(time=0){
+    const {ctx,width:w,height:h}=setupCanvas(crystalCanvas);
+    ctx.clearRect(0,0,w,h);
+    const r=state.result,v=state.values;
+    ensureParticles();
+
+    // Vessel and liquid
+    const left=w*.12,right=w*.88,top=h*.25,bottom=h*.88;
+    ctx.fillStyle="rgba(39,125,161,.08)";
+    roundedRect(ctx,left,top,right-left,bottom-top,18);ctx.fill();
+    ctx.strokeStyle="rgba(39,125,161,.42)";ctx.lineWidth=2;ctx.stroke();
+    const waveY=top+(bottom-top)*.15;
+    ctx.beginPath();
+    for(let xx=left;xx<=right;xx+=6){
+      const yy=waveY+Math.sin(xx*.055+time*.0018)*2.5;
+      if(xx===left)ctx.moveTo(xx,yy);else ctx.lineTo(xx,yy);
+    }
+    ctx.lineTo(right,bottom);ctx.lineTo(left,bottom);ctx.closePath();
+    ctx.fillStyle="rgba(46,165,154,.08)";ctx.fill();
+
+    const growRate=.00005 + Math.min(.00055,r.growth/150000);
+    const drift=.00005 + v.agitation/500000;
+    particles.forEach((p,i)=>{
+      p.phase+=.018+v.agitation*.00018;
+      p.vx += Math.cos(p.phase+i)*drift;
+      p.vy += Math.sin(p.phase*.83+i)*drift - .000008;
+      p.vx*=.985;p.vy*=.985;
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<.18){p.x=.18;p.vx=Math.abs(p.vx)}
+      if(p.x>.82){p.x=.82;p.vx=-Math.abs(p.vx)}
+      if(p.y<.34){p.y=.34;p.vy=Math.abs(p.vy)}
+      if(p.y>.83){p.y=.83;p.vy=-Math.abs(p.vy)}
+      if(r.S<.99)p.s=Math.max(.25,p.s-.0008);
+      else p.s=Math.min(1.8,p.s+growRate);
+      p.rot += (.0004+v.agitation*.000015)*(i%2?1:-1);
+
+      const base=5 + Math.sqrt(r.meanSize)/2.4;
+      const spread=1+(r.cv/100)*(p.s-.8);
+      const size=Math.max(3,Math.min(24,base*p.s*spread));
+      drawCrystalShape(ctx,p.x*w,p.y*h,size,p.rot,r.material.shape,.55+.35*Math.sin(p.phase)*.15+.35);
+    });
+
+    // Impeller
+    const cx=w*.5,cy=h*.62;
+    ctx.save();ctx.translate(cx,cy);ctx.rotate(time*.001*(.2+v.agitation/70));
+    ctx.strokeStyle="#7867a9";ctx.lineWidth=4;ctx.lineCap="round";
+    ctx.beginPath();ctx.moveTo(0,-h*.36);ctx.lineTo(0,0);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(-w*.12,0);ctx.lineTo(w*.12,0);ctx.moveTo(0,0);ctx.lineTo(-w*.08,h*.07);ctx.moveTo(0,0);ctx.lineTo(w*.08,h*.07);ctx.stroke();
+    ctx.restore();
+
+    requestAnimationFrame(drawCrystals);
+  }
+
+  window.addEventListener("resize",()=>{state.simAlpha=Math.max(state.simAlpha,.06)});
+  updateAll();
+  fitGraph();
+  requestAnimationFrame(drawGraph);
+  requestAnimationFrame(drawChart);
+  requestAnimationFrame(drawCrystals);
+})();
+</script>
+</body>
+</html>
